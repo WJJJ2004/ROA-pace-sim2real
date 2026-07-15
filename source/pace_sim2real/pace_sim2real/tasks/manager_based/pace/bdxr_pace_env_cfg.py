@@ -72,8 +72,11 @@ class BDXRPaceCfg(PaceCfg):
 @configclass
 class BDXRPaceSceneCfg(PaceSim2realSceneCfg):
     """Configuration for BDX-R robot in Pace Sim2Real environment."""
-    robot: ArticulationCfg = BDX_R_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot", init_state=ArticulationCfg.InitialStateCfg(pos=(0.0, 0.0, 1.0)),
-                                                  actuators={"legs": BDXR_03_PACE_ACTUATOR_CFG, "ankles": BDXR_02_PACE_ACTUATOR_CFG})
+    robot: ArticulationCfg = BDX_R_CFG.replace(
+        prim_path="{ENV_REGEX_NS}/Robot",
+        init_state=ArticulationCfg.InitialStateCfg(pos=(0.0, 0.0, 1.0)),
+        actuators={"legs": BDXR_03_PACE_ACTUATOR_CFG, "ankles": BDXR_02_PACE_ACTUATOR_CFG}
+    )
 
 
 @configclass
