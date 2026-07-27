@@ -23,7 +23,7 @@ gym.register(
 )
 
 gym.register(
-    id="Isaac-Pace-BDX-R-v0",
+    id="Isaac-Pace-ROA-v0",
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     disable_env_checker=True,
     kwargs={

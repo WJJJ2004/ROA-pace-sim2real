@@ -1,5 +1,5 @@
 # assets/roa/roa.py
-
+from pathlib import Path
 import math
 
 import isaaclab.sim as sim_utils
@@ -10,21 +10,21 @@ ROA_ASSETS_DIR = Path(__file__).resolve().parent
 
 USD_PATH = f"{ROA_ASSETS_DIR}/roa_deploy/roa_deploy.usd"
 
-ROA_INIT_JOINT_POS = {
-    "left_hip_pitch": math.radians(-20.0),
-    "left_hip_roll": 0.0,
-    "left_hip_yaw": 0.0,
-    "left_knee_pitch": math.radians(50.0),
-    "left_ankle_pitch": math.radians(-30.0),
-    "left_ankle_roll": 0.0,
+# ROA_INIT_JOINT_POS = {
+#     "left_hip_pitch": math.radians(-20.0),
+#     "left_hip_roll": 0.0,
+#     "left_hip_yaw": 0.0,
+#     "left_knee_pitch": math.radians(50.0),
+#     "left_ankle_pitch": math.radians(-30.0),
+#     "left_ankle_roll": 0.0,
 
-    "right_hip_pitch": math.radians(20.0),
-    "right_hip_roll": 0.0,
-    "right_hip_yaw": 0.0,
-    "right_knee_pitch": math.radians(-50.0),
-    "right_ankle_pitch": math.radians(30.0),
-    "right_ankle_roll": 0.0,
-}
+#     "right_hip_pitch": math.radians(20.0),
+#     "right_hip_roll": 0.0,
+#     "right_hip_yaw": 0.0,
+#     "right_knee_pitch": math.radians(-50.0),
+#     "right_ankle_pitch": math.radians(30.0),
+#     "right_ankle_roll": 0.0,
+# }
 
 _RSU_KVALUE = 1.37
 
@@ -41,14 +41,6 @@ Robit Notion Link: https://app.notion.com/p/robitkw/RSU-Equivalent-PD-Gain-Analy
 
 
 _JOINT_META = {
-    # ────────────── TORSO ──────────────
-   # "torso_yaw": {
-   #     "kp": 50.0,
-   #     "kd": 2.0,
-   #     "torque": 36.0,
-   #     "vmax": 67.0,
-   #     "arm": 0.01,
-   # },
 
     # ────────────── LEFT LEG ──────────────
     "left_hip_pitch": {
@@ -80,15 +72,15 @@ _JOINT_META = {
         "arm": 0.0004,
     },
     "left_ankle_pitch": {
-        "kp": 30.0,
-        "kd": 2.5,
+        "kp": 25.0,
+        "kd": 1.2,
         "torque": 11.9,
         "vmax": 5.0,
         "arm": 0.02,
     },
     "left_ankle_roll": {
-        "kp": 30.0 * _RSU_KVALUE,
-        "kd": 2.5 * _RSU_KVALUE,
+        "kp": 25.0 * _RSU_KVALUE,
+        "kd": 1.2 * _RSU_KVALUE,
         "torque": 11.9,
         "vmax": 5.0,
         "arm": 0.02,
@@ -131,24 +123,24 @@ _JOINT_META = {
         "arm": 0.02,
     },
     "right_ankle_roll": {
-        "kp": 30.0 * _RSU_KVALUE,
-        "kd": 2.5 * _RSU_KVALUE,
+        "kp": 25.0 * _RSU_KVALUE,
+        "kd": 1.2 * _RSU_KVALUE,
         "torque": 11.9,
         "vmax": 5.0,
         "arm": 0.02,
     },
 }
 
-ROA_TRAINING_ACTUATORS = {
+ROA_ACTUATORS = {
     jn: DelayedPDActuatorCfg(
         joint_names_expr=[jn],
-        effort_limit=meta["torque"],    # reduce torque limit to 75% for better sim stability with delay
+        effort_limit=meta["torque"],
         velocity_limit=meta["vmax"],
         stiffness={jn: meta["kp"]},
         damping={jn: meta["kd"]},
         armature=meta["arm"],
-        min_delay=7, # 2
-        max_delay=12, # 12
+        min_delay=6,
+        max_delay=12,
     )
     for jn, meta in _JOINT_META.items()
 }
@@ -171,14 +163,14 @@ ROA_CFG = ArticulationCfg(
         articulation_props=sim_utils.ArticulationRootPropertiesCfg(
             enabled_self_collisions=False,
             solver_position_iteration_count=4,
-            solver_velocity_iteration_count=4,
+            solver_velocity_iteration_count=0,
         ),
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         pos=(0.0, 0.0, 0.7),
-        joint_pos=ROA_INIT_JOINT_POS,
-        joint_vel={".*": 0.0},
+        # joint_pos=ROA_INIT_JOINT_POS,
+        # joint_vel={".*": 0.0},
     ),
-    soft_joint_pos_limit_factor=1.0,
-    actuators=ROA_TRAINING_ACTUATORS,
+    actuators=ROA_ACTUATORS,
+    soft_joint_pos_limit_factor=0.95,
 )
