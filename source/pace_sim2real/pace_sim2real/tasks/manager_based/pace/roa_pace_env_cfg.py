@@ -24,6 +24,17 @@ ROA_JOINT_ORDER = [
     "right_ankle_roll",
 ]
 
+GLOBAL_STATIC_FRICTION = 0.0
+GLOBAL_DYNAMIC_FRICTION = 0.0
+GLOBAL_VISCOUS_FRICTION = 0.0
+
+# GLOBAL_STATIC_FRICTION = 0.075
+# GLOBAL_DYNAMIC_FRICTION = 0.01
+# GLOBAL_VISCOUS_FRICTION = 0.8
+GLOBAL_ARMATURE_SCALE = 1.0 # float type, scale factor for armature inertia (unit kgm2)
+
+GLOBAL_MAX_DELAY = 4 # int type, max Torque delay in simulation steps (unit 2.5 milliseconds) 
+
 ROA_RS03_PACE_ACTUATOR_CFG = PaceDCMotorCfg(
     joint_names_expr=[
         ".*_hip_roll",
@@ -40,11 +51,14 @@ ROA_RS03_PACE_ACTUATOR_CFG = PaceDCMotorCfg(
         ".*_hip_roll": 26.387,
         ".*_hip_yaw": 3.419,
     },
+    armature={
+        ".*": 0.04 *GLOBAL_ARMATURE_SCALE,
+    },
     encoder_bias={".*": 0.0},
-    friction={".*": 0.0},          # static friction coefficient (Nm)
-    dynamic_friction={".*": 0.0},  # dynamic friction coefficient (Nm)
-    viscous_friction={".*": 0.0},  # viscous friction coefficient (Nm s/rad)
-    max_delay=10,                  # max delay in simulation steps
+    friction={".*": GLOBAL_STATIC_FRICTION},          # static friction coefficient (Nm)
+    dynamic_friction={".*": GLOBAL_DYNAMIC_FRICTION},  # dynamic friction coefficient (Nm)
+    viscous_friction={".*": GLOBAL_VISCOUS_FRICTION},  # viscous friction coefficient (Nm s/rad)
+    max_delay=GLOBAL_MAX_DELAY,                  # max delay in simulation steps
 )
 
 ROA_RS04_PACE_ACTUATOR_CFG = PaceDCMotorCfg(
@@ -64,21 +78,21 @@ ROA_RS04_PACE_ACTUATOR_CFG = PaceDCMotorCfg(
         ".*_knee_pitch": 8.654,
     },
     armature={
-        ".*": 0.0004,
+        ".*": 0.04 * GLOBAL_ARMATURE_SCALE,
     },
     encoder_bias={
         ".*": 0.0,
     },
     friction={
-        ".*": 0.0,
+        ".*": GLOBAL_STATIC_FRICTION,
     },
     dynamic_friction={
-        ".*": 0.0,
+        ".*": GLOBAL_DYNAMIC_FRICTION,
     },
     viscous_friction={
-        ".*": 0.0,
+        ".*": GLOBAL_VISCOUS_FRICTION,
     },
-    max_delay=10,
+    max_delay=GLOBAL_MAX_DELAY,
 )
 
 # TODO 정확한 값으로 업데이트 필요 (액추에이터 -> 가상관절 토크 전파)
@@ -99,28 +113,94 @@ ROA_RSU_PACE_ACTUATOR_CFG = PaceDCMotorCfg(
         ".*_ankle_roll": 2.5 * 1.37,
     },
     armature={
-        ".*": 0.02,
+        ".*": 0.02 * GLOBAL_ARMATURE_SCALE,
     },
     encoder_bias={
         ".*": 0.0,
     },
     friction={
-        ".*": 0.0,
+        ".*": GLOBAL_STATIC_FRICTION,
     },
     dynamic_friction={
-        ".*": 0.0,
+        ".*": GLOBAL_DYNAMIC_FRICTION,
     },
     viscous_friction={
-        ".*": 0.0,
+        ".*": GLOBAL_VISCOUS_FRICTION,
     },
-    max_delay=10,
+    max_delay=GLOBAL_MAX_DELAY,
 )
+
+def print_roa_pace_config(env_cfg) -> None:
+    """현재 적용된 ROA PACE 주요 설정을 콘솔에 출력한다."""
+
+    separator = "=" * 78
+    subsection = "-" * 78
+
+    print(f"\n{separator}")
+    print("                     ROA PACE CONFIGURATION")
+    print(separator)
+
+    print("[Simulation]")
+    print(f"  Simulation dt       : {env_cfg.sim.dt:.6f} s")
+    print(f"  Simulation frequency: {1.0 / env_cfg.sim.dt:.2f} Hz")
+    print(f"  Decimation          : {env_cfg.decimation}")
+    print(
+        f"  Control frequency   : "
+        f"{1.0 / (env_cfg.sim.dt * env_cfg.decimation):.2f} Hz"
+    )
+
+    print(subsection)
+    print("[Global Actuator Parameters]")
+    print(f"  Static friction     : {GLOBAL_STATIC_FRICTION:.6f} Nm")
+    print(f"  Dynamic friction    : {GLOBAL_DYNAMIC_FRICTION:.6f} Nm")
+    print(f"  Viscous friction    : {GLOBAL_VISCOUS_FRICTION:.6f} Nm·s/rad")
+    print(f"  Armature scale      : {GLOBAL_ARMATURE_SCALE:.6f}")
+    print(f"  Maximum delay       : {GLOBAL_MAX_DELAY} sim step(s)")
+    print(
+        f"  Maximum delay time  : "
+        f"{GLOBAL_MAX_DELAY * env_cfg.sim.dt * 1000.0:.3f} ms"
+    )
+
+    actuator_configs = {
+        "RobStride RS03": ROA_RS03_PACE_ACTUATOR_CFG,
+        "RobStride RS04": ROA_RS04_PACE_ACTUATOR_CFG,
+        "RSU": ROA_RSU_PACE_ACTUATOR_CFG,
+    }
+
+    for actuator_name, actuator_cfg in actuator_configs.items():
+        print(subsection)
+        print(f"[{actuator_name}]")
+
+        print(f"  Joint expressions   : {actuator_cfg.joint_names_expr}")
+        print(f"  Saturation effort   : {actuator_cfg.saturation_effort}")
+        print(f"  Effort limit        : {actuator_cfg.effort_limit}")
+        print(f"  Velocity limit      : {actuator_cfg.velocity_limit}")
+
+        print(f"  Stiffness           : {actuator_cfg.stiffness}")
+        print(f"  Damping             : {actuator_cfg.damping}")
+        print(f"  Armature            : {actuator_cfg.armature}")
+        print(f"  Static friction     : {actuator_cfg.friction}")
+        print(f"  Dynamic friction    : {actuator_cfg.dynamic_friction}")
+        print(f"  Viscous friction    : {actuator_cfg.viscous_friction}")
+        print(f"  Encoder bias        : {actuator_cfg.encoder_bias}")
+        print(f"  Maximum delay       : {actuator_cfg.max_delay} sim step(s)")
+
+    print(subsection)
+    print("[PACE Dataset]")
+    print(f"  Robot name          : {env_cfg.sim2real.robot_name}")
+    print(f"  Data path           : {env_cfg.sim2real.data_dir}")
+    print(f"  Number of joints    : {len(env_cfg.sim2real.joint_order)}")
+    print(f"  Joint order         : {env_cfg.sim2real.joint_order}")
+
+    print(separator)
+    print("                 ROA PACE CONFIGURATION LOADED")
+    print(f"{separator}\n")
 
 @configclass
 class ROAPaceCfg(PaceCfg):
     """Pace configuration for ROA robot."""   
     robot_name: str = "roa_sim"
-    data_dir: str = "roa_sim/chirp_data.pt"  # located in pace_sim2real/data/roa_sim/chirp_data.pt
+    data_dir: str = "roa_sim/chirp_data_Hip.pt"  # located in pace_sim2real/data/roa_sim/chirp_data.pt
     joint_order: list[str] = ROA_JOINT_ORDER
 
     bounds_params: torch.Tensor = torch.zeros((49, 2))
@@ -152,7 +232,7 @@ class ROAPaceCfg(PaceCfg):
 
         # delay between 0.0 - 10.0 [sim steps]
         self.bounds_params[delay_idx, 0] = 0.0
-        self.bounds_params[delay_idx, 1] = 10.0
+        self.bounds_params[delay_idx, 1] = 4.0
 
 @configclass
 class ROAPaceSceneCfg(PaceSim2realSceneCfg):
@@ -167,6 +247,11 @@ class ROAPaceSceneCfg(PaceSim2realSceneCfg):
             "rsu": ROA_RSU_PACE_ACTUATOR_CFG,
         },
     )
+    
+    # 로그 정리 필요    
+    # print(f"[INFO]: ROA robot configuration: {robot}")
+    # print(f"[INFO]: ROA robot actuator configuration: {robot.actuators}")
+
 
 
 @configclass
@@ -182,4 +267,4 @@ class ROAPaceEnvCfg(PaceSim2realEnvCfg):
         # robot sim and control settings
         self.sim.dt = 0.0025  # 400Hz simulation
         self.decimation = 1  # 400Hz control
-
+        print_roa_pace_config(self)
